@@ -1,0 +1,76 @@
+From 24d3ee0d08f24e23c91d55702f010f73d7b908e5 Mon Sep 17 00:00:00 2001
+From: Thomas Klausner <wiz@NetBSD.org>
+Date: Tue, 25 Jun 2013 22:35:29 +0200
+Subject: [PATCH libX11] Tighten out-of-range comparisons.
+
+[For all of these, LONG_MAX was the correct value to prevent overflows
+ for the recent CVEs.   Lowering to INT_MAX catches buggy replies from
+ the server that 32-bit clients would reject but 64-bit would accept,
+ so we catch bugs sooner, and really, no sane & working server should
+ ever report more than 2gb of extension names, font path entries,
+ key modifier maps, etc.  -alan- ]
+
+Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+---
+ src/FontNames.c | 2 +-
+ src/GetFPath.c  | 2 +-
+ src/ListExt.c   | 2 +-
+ src/ModMap.c    | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/FontNames.c b/src/FontNames.c
+index b5bc7b4..7647115 100644
+--- a/src/FontNames.c
++++ b/src/FontNames.c
+@@ -66,7 +66,7 @@ int *actualCount)	/* RETURN */
+ 
+     if (rep.nFonts) {
+ 	flist = Xmalloc (rep.nFonts * sizeof(char *));
+-	if (rep.length < (LONG_MAX >> 2)) {
++	if (rep.length < (INT_MAX >> 2)) {
+ 	    rlen = rep.length << 2;
+ 	    ch = Xmalloc(rlen + 1);
+ 	    /* +1 to leave room for last null-terminator */
+diff --git a/src/GetFPath.c b/src/GetFPath.c
+index abd4a5d..8f8c614 100644
+--- a/src/GetFPath.c
++++ b/src/GetFPath.c
+@@ -50,7 +50,7 @@ char **XGetFontPath(
+ 
+ 	if (rep.nPaths) {
+ 	    flist = Xmalloc(rep.nPaths * sizeof (char *));
+-	    if (rep.length < (LONG_MAX >> 2)) {
++	    if (rep.length < (INT_MAX >> 2)) {
+ 		nbytes = (unsigned long) rep.length << 2;
+ 		ch = Xmalloc (nbytes + 1);
+                 /* +1 to leave room for last null-terminator */
+diff --git a/src/ListExt.c b/src/ListExt.c
+index e925c47..59599d1 100644
+--- a/src/ListExt.c
++++ b/src/ListExt.c
+@@ -55,7 +55,7 @@ char **XListExtensions(
+ 
+ 	if (rep.nExtensions) {
+ 	    list = Xmalloc (rep.nExtensions * sizeof (char *));
+-	    if (rep.length < (LONG_MAX >> 2)) {
++	    if (rep.length < (INT_MAX >> 2)) {
+ 		rlen = rep.length << 2;
+ 		ch = Xmalloc (rlen + 1);
+                 /* +1 to leave room for last null-terminator */
+diff --git a/src/ModMap.c b/src/ModMap.c
+index 5c5b426..04cd676 100644
+--- a/src/ModMap.c
++++ b/src/ModMap.c
+@@ -42,7 +42,7 @@ XGetModifierMapping(register Display *dpy)
+     GetEmptyReq(GetModifierMapping, req);
+     (void) _XReply (dpy, (xReply *)&rep, 0, xFalse);
+ 
+-    if (rep.length < (LONG_MAX >> 2)) {
++    if (rep.length < (INT_MAX >> 2)) {
+ 	nbytes = (unsigned long)rep.length << 2;
+ 	res = Xmalloc(sizeof (XModifierKeymap));
+ 	if (res)
+-- 
+2.3.5
+

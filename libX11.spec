@@ -5,7 +5,7 @@
 Summary: Core X11 protocol client library
 Name: libX11
 Version: 1.6.0
-Release: 2.2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Release: 6%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 License: MIT
 Group: System Environment/Libraries
 URL: http://www.x.org
@@ -20,14 +20,21 @@ Source0: http://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.t
 
 Patch0: 0001-Revert-Delete-now-redundant-XKeysymDB.patch
 Patch2: dont-forward-keycode-0.patch
+Patch3: libX11-1.6.0-fix-for-Xlib-32-bit-request-number-issues.patch
+# Bug 1222348 - New defect found in libX11-1.6.0-5.el6
+Patch4: 0001-Fix-out-of-range-comparison-in-_XF86BigfontQueryFont.patch
+Patch5: 0002-Tighten-out-of-range-comparisons.patch
+Patch6: 0003-Fix-potential-memory-leak.patch
+
 BuildRequires: xorg-x11-util-macros >= 1.11
 BuildRequires: pkgconfig(xproto) >= 7.0.15
 BuildRequires: xorg-x11-xtrans-devel >= 1.0.3-4
-BuildRequires: libxcb-devel >= 1.2
+BuildRequires: libxcb-devel >= 1.9.1-3
 BuildRequires: pkgconfig(xau) pkgconfig(xdmcp)
 BuildRequires: perl(Pod::Usage)
 
 Requires: %{name}-common = %{version}-%{release}
+Conflicts: libxcb < 1.9.1-3
 
 %description
 Core X11 protocol client library.
@@ -52,6 +59,10 @@ X.Org X11 libX11 development package
 %setup -q -n %{tarball}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
 %patch0 -p1 -b .xkeysymdb
 %patch2 -p1 -b .dont-forward-keycode-0
+%patch3 -p1 -b .64bit-seqno
+%patch4 -p1 -b .covscan-out-of-range
+%patch5 -p1 -b .covscan-out-of-range2
+%patch6 -p1 -b .covscan-leak
 
 %build
 # sodding libtool
@@ -116,6 +127,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man5/*.5*
 
 %changelog
+* Tue May 19 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.6.0-6
+- Fix request length checks always evaluating to true (#1222348)
+- Fix potential memory leak
+
+* Wed May 13 2015 Olivier Fourdan <ofourdan@redhat.com> 1.6.0-5
+- Rebuild to apply 64bit sequence number patch
+
+* Tue May 12 2015 Olivier Fourdan <ofourdan@redhat.com> 1.6.0-4
+- Use 64bit sequence number API from libxcb to avoid 32-bit wrap
+
+* Tue Nov 25 2014 Peter Hutterer <peter.hutterer@redhat.com> 1.6.0-3
+- Rebuild to pick up XF86AudioMicMute (#667789)
+
 * Mon Apr 28 2014 Adam Jackson <ajax@redhat.com> 1.6.0-2.2
 - Restore XKeysymDB
 
