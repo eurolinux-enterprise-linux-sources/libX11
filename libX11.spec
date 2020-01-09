@@ -4,8 +4,8 @@
 
 Summary: Core X11 protocol client library
 Name: libX11
-Version: 1.6.0
-Release: 6%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
+Version: 1.6.3
+Release: 2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 License: MIT
 Group: System Environment/Libraries
 URL: http://www.x.org
@@ -20,11 +20,9 @@ Source0: http://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.t
 
 Patch0: 0001-Revert-Delete-now-redundant-XKeysymDB.patch
 Patch2: dont-forward-keycode-0.patch
-Patch3: libX11-1.6.0-fix-for-Xlib-32-bit-request-number-issues.patch
-# Bug 1222348 - New defect found in libX11-1.6.0-5.el6
-Patch4: 0001-Fix-out-of-range-comparison-in-_XF86BigfontQueryFont.patch
-Patch5: 0002-Tighten-out-of-range-comparisons.patch
+Patch3: libX11-fix-for-Xlib-32-bit-request-number-issues.patch
 Patch6: 0003-Fix-potential-memory-leak.patch
+Patch7: XKB-fix-XkbGetKeyboardByName-with-Xming-server.patch
 
 BuildRequires: xorg-x11-util-macros >= 1.11
 BuildRequires: pkgconfig(xproto) >= 7.0.15
@@ -60,9 +58,8 @@ X.Org X11 libX11 development package
 %patch0 -p1 -b .xkeysymdb
 %patch2 -p1 -b .dont-forward-keycode-0
 %patch3 -p1 -b .64bit-seqno
-%patch4 -p1 -b .covscan-out-of-range
-%patch5 -p1 -b .covscan-out-of-range2
 %patch6 -p1 -b .covscan-leak
+%patch7 -p1 -b .xkb-xming
 
 %build
 # sodding libtool
@@ -127,6 +124,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man5/*.5*
 
 %changelog
+* Thu Jan 21 2016 Olivier Fourdan <ofourdan@redhat.com> 1.6.3-2
+- Fix XkbGetKeyboardByName issue with Xming server (#1158613)
+
+* Wed Nov 04 2015 Adam Jackson <ajax@redhat.com> 1.6.3-1
+- libX11 1.6.3
+
 * Tue May 19 2015 Peter Hutterer <peter.hutterer@redhat.com> 1.6.0-6
 - Fix request length checks always evaluating to true (#1222348)
 - Fix potential memory leak
