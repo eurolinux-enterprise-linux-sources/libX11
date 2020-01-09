@@ -1,28 +1,31 @@
-%define tarball libX11
-#define gitdate 20090805
+%global tarball libX11
+#global gitdate 20130524
+%global gitversion a3bdd2b09
 
 Summary: Core X11 protocol client library
 Name: libX11
-Version: 1.5.0
-Release: 4%{?dist}
+Version: 1.6.0
+Release: 2.2%{?gitdate:.%{gitdate}git%{gitversion}}%{?dist}
 License: MIT
 Group: System Environment/Libraries
 URL: http://www.x.org
 
+%if 0%{?gitdate}
+Source0:    %{tarball}-%{gitdate}.tar.bz2
+Source1:    make-git-snapshot.sh
+Source2:    commitid
+%else
 Source0: http://xorg.freedesktop.org/archive/individual/lib/%{name}-%{version}.tar.bz2
-#Source0: http://cgit.freedesktop.org/xorg/lib/libX11/snapshot/libX11-%{version}.tar.bz2 
-#Source0:    %{tarball}-%{gitdate}.tar.bz2
-#Source1:    make-git-snapshot.sh
+%endif
 
+Patch0: 0001-Revert-Delete-now-redundant-XKeysymDB.patch
 Patch2: dont-forward-keycode-0.patch
-# Restore XKeysymDB, openmotif requires it and potentially other apps
-Patch3: 0001-Revert-Delete-now-redundant-XKeysymDB.patch
-
 BuildRequires: xorg-x11-util-macros >= 1.11
 BuildRequires: pkgconfig(xproto) >= 7.0.15
 BuildRequires: xorg-x11-xtrans-devel >= 1.0.3-4
 BuildRequires: libxcb-devel >= 1.2
 BuildRequires: pkgconfig(xau) pkgconfig(xdmcp)
+BuildRequires: perl(Pod::Usage)
 
 Requires: %{name}-common = %{version}-%{release}
 
@@ -46,10 +49,9 @@ Requires: %{name} = %{version}-%{release}
 X.Org X11 libX11 development package
 
 %prep
-%setup -q
-#setup -q -n %{tarball}-%{gitdate}
+%setup -q -n %{tarball}-%{?gitdate:%{gitdate}}%{!?gitdate:%{version}}
+%patch0 -p1 -b .xkeysymdb
 %patch2 -p1 -b .dont-forward-keycode-0
-%patch3 -p1
 
 %build
 # sodding libtool
@@ -114,8 +116,35 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man5/*.5*
 
 %changelog
-* Thu Aug 02 2012 Peter Hutterer <peter.hutterer@redhat.com> 1.5.0-4
-- Bring back XKeysymDB, openmotif requires it (#755657)
+* Mon Apr 28 2014 Adam Jackson <ajax@redhat.com> 1.6.0-2.2
+- Restore XKeysymDB
+
+* Wed Feb 12 2014 Adam Jackson <ajax@redhat.com> 1.6.0-2.1
+- Mass rebuild
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1.6.0-2
+- Mass rebuild 2013-12-27
+
+* Tue Jun 04 2013 Peter Hutterer <peter.hutterer@redhat.com> 1.6.0-1
+- libX11 1.6.0
+
+* Mon May 27 2013 Peter Hutterer <peter.hutterer@redhat.com> 1.5.99.902-1
+- Update to 1.5.99.902 (same code-base, just easier in Requires)
+
+* Fri May 24 2013 Peter Hutterer <peter.hutterer@redhat.com> 1.5.99.901-3..20130524gita3bdd2b09
+- Udpate to git snapshot to fix CVEs listed below
+- CVE-2013-1997
+- CVE-2013-1981
+- CVE-2013-2004
+
+* Sun Mar 10 2013 Peter Hutterer <peter.hutterer@redhat.com> 1.5.99.901-2
+- Add BR for Pod::Usage, needed by compose-chart.pl
+
+* Sun Mar 10 2013 Peter Hutterer <peter.hutterer@redhat.com> 1.5.99.901.-1
+- libX11 1.6RC1
+
+* Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.5.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 
 * Thu Jul 19 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.5.0-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
